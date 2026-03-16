@@ -326,14 +326,15 @@ void RunTextPrinters(void)
         {
             if (sTextPrinters[i].active)
             {
-                u16 renderCmd = RenderFont(&sTextPrinters[i]);
-                switch (renderCmd)
+                u16 temp = RenderFont(&sTextPrinters[i]);
+		CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, 2);
+                switch (temp)
                 {
                 case RENDER_PRINT:
-                    CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, COPYWIN_GFX);
+             CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, 2);
                 case RENDER_UPDATE:
                     if (sTextPrinters[i].callback != NULL)
-                        sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, renderCmd);
+                        sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, temp);
                     break;
                 case RENDER_FINISH:
                     sTextPrinters[i].active = FALSE;
@@ -937,6 +938,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
     u16 currChar;
     s32 width;
     s32 widthHelper;
+	u8 repeats;
 
     switch (textPrinter->state)
     {
@@ -959,6 +961,21 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             textPrinter->delayCounter = 3;
         else
             textPrinter->delayCounter = textPrinter->textSpeed;
+        		
+		switch (GetPlayerTextSpeed())
+		{
+			case OPTIONS_TEXT_SPEED_SLOW:
+				repeats = 1;
+				break;
+			case OPTIONS_TEXT_SPEED_MID:
+				repeats = 2;
+				break;
+			case OPTIONS_TEXT_SPEED_FAST:
+				repeats = 4;
+				break;
+		}
+		
+		do {
 
         currChar = *textPrinter->printerTemplate.currentChar;
         textPrinter->printerTemplate.currentChar++;
@@ -1144,7 +1161,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             break;
         }
 
-        CopyGlyphToWindow(textPrinter);
+CopyGlyphToWindow(textPrinter);
 
         if (textPrinter->minLetterSpacing)
         {
@@ -1163,7 +1180,13 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             else
                 textPrinter->printerTemplate.currentX += gCurGlyph.width;
         }
-        return RENDER_PRINT;
+
+        repeats--;
+        
+    } while (repeats > 0);
+        
+    return RENDER_PRINT;
+
     case RENDER_STATE_WAIT:
         if (TextPrinterWait(textPrinter))
             textPrinter->state = RENDER_STATE_HANDLE_CHAR;
