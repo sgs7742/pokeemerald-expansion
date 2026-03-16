@@ -38,7 +38,7 @@
 #include "window.h"
 #include "constants/items.h"
 #include "constants/moves.h"
-#include "constants/rgb.h"s
+#include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/pokemon_icon.h"
 
