@@ -1841,7 +1841,24 @@ static void Task_PartyMenuModifyHP(u8 taskId)
     s16 *data = gTasks[taskId].data;
 
     tHP += tHPIncrement;
-    tHPToAdd--;
+    if (tHPIncrement > 0)
+    {
+        tHPToAdd -= tHPIncrement;
+        if (tHPToAdd / tHPIncrement <= 1)
+        {
+            tHP += tHPToAdd;
+            tHPToAdd -= tHPToAdd;
+        }
+    }
+    else
+    {
+        tHPToAdd += tHPIncrement;
+        if (tHPToAdd / tHPIncrement >= -1)
+        {
+            tHP += -tHPToAdd;
+            tHPToAdd -= tHPToAdd;
+        }
+    }
     SetMonData(&gPlayerParty[tPartyId], MON_DATA_HP, &tHP);
     DisplayPartyPokemonHPCheck(&gPlayerParty[tPartyId], &sPartyMenuBoxes[tPartyId], 1);
     DisplayPartyPokemonHPBarCheck(&gPlayerParty[tPartyId], &sPartyMenuBoxes[tPartyId]);
@@ -4444,7 +4461,11 @@ void ItemUseCB_Medicine(u8 taskId, TaskFunc task)
         {
             if (hp == 0)
                 AnimatePartySlot(gPartyMenu.slotId, 1);
-            PartyMenuModifyHP(taskId, gPartyMenu.slotId, 1, GetMonData(mon, MON_DATA_HP) - hp, Task_DisplayHPRestoredMessage);
+
+                if (GetMonData(mon, MON_DATA_MAX_HP) <= 48)
+                    PartyMenuModifyHP(taskId, gPartyMenu.slotId, 2, GetMonData(mon, MON_DATA_HP) - hp, Task_DisplayHPRestoredMessage);
+                else
+                    PartyMenuModifyHP(taskId, gPartyMenu.slotId, max(GetMonData(mon, MON_DATA_MAX_HP) / (48 / 2), 1), GetMonData(mon, MON_DATA_HP) - hp, Task_DisplayHPRestoredMessage);
             ResetHPTaskData(taskId, 0, hp);
             return;
         }
@@ -5180,10 +5201,13 @@ static void UseSacredAsh(u8 taskId)
         DisplayPartyPokemonLevelCheck(mon, &sPartyMenuBoxes[gPartyMenu.slotId], 1);
     AnimatePartySlot(sPartyMenuInternal->tLastSlotUsed, 0);
     AnimatePartySlot(gPartyMenu.slotId, 1);
-    PartyMenuModifyHP(taskId, gPartyMenu.slotId, 1, GetMonData(mon, MON_DATA_HP) - hp, Task_SacredAshDisplayHPRestored);
-    ResetHPTaskData(taskId, 0, hp);
-    sPartyMenuInternal->tUsedOnSlot = TRUE;
-    sPartyMenuInternal->tHadEffect = TRUE;
+    if (GetMonData(mon, MON_DATA_MAX_HP) <= 48)
+        PartyMenuModifyHP(taskId, gPartyMenu.slotId, 2, GetMonData(mon, MON_DATA_HP) - hp, Task_SacredAshDisplayHPRestored);
+    else
+        PartyMenuModifyHP(taskId, gPartyMenu.slotId, max(GetMonData(mon, MON_DATA_MAX_HP) / (48 / 2), 1), GetMonData(mon, MON_DATA_HP) - hp, Task_SacredAshDisplayHPRestored);    ResetHPTaskData(taskId, 0, hp);
+    
+   sPartyMenuInternal->tUsedOnSlot = TRUE;
+   sPartyMenuInternal->tHadEffect = TRUE;
 }
 
 static void Task_SacredAshLoop(u8 taskId)
