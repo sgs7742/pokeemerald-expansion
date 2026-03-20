@@ -3149,8 +3149,7 @@ static void PlayerCmdEnd(void)
 {
 }
 
-static void MoveSelectionDisplaySplitIcon(void)
-{
+static void MoveSelectionDisplaySplitIcon(void){
 	struct ChooseMoveStruct *moveInfo;
 	u32 moveCategory;
 
